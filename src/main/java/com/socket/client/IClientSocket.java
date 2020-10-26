@@ -6,8 +6,6 @@ import com.socket.utils.Command;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.Random;
 
 public class IClientSocket {
     public static void main(String[] args) {
@@ -133,28 +131,34 @@ public class IClientSocket {
                     packet.setMessageType(Command.TUNNEL_TYPE_DATA);
                     packet.setSession_id((short) 1234);
                     byte[] bytes1 = packet.getSerial_num();
-                    bytes1[0] = (byte)0x10;
-                    bytes1[1] = (byte)0x20;
+                    bytes1[0] = (byte)0x05;
+                    bytes1[1] = (byte)0x0b;
                     packet.setSerial_num(bytes1);
-                    File file = new File("F:\\BaiduNetdiskDownload\\Rational Rose 破解版.zip");
-                    InputStream inputStream = new FileInputStream(file);
-                    int num = 0;
-                    Random random = new Random();
-                    do{
-                        num++;
-                        int r = random.nextInt(64) + 1;
-                        byte[] readBytes = new byte[1024 * r];
-                        int length = inputStream.read(readBytes);
-                        if(length == -1){
-                            System.out.println("读取完毕");
-                            break;
-                        }
-                        packet.setLen(length);
-                        packet.setBody(readBytes);
-                        byte[] req = TransPacketCode.encode(packet); //编码
-                        writer.write(req);
-                    }while (true);
-                    inputStream.close();
+                    String value = "你好";
+                    byte[] vale = value.getBytes();
+                    packet.setBody(vale);
+                    packet.setLen(vale.length);
+                    byte[] req = TransPacketCode.encode(packet);
+                    writer.write(req);
+//                    File file = new File("F:\\BaiduNetdiskDownload\\Rational Rose 破解版.zip");
+//                    InputStream inputStream = new FileInputStream(file);
+//                    int num = 0;
+//                    Random random = new Random();
+//                    do{
+//                        num++;
+//                        int r = random.nextInt(64) + 1;
+//                        byte[] readBytes = new byte[1024 * r];
+//                        int length = inputStream.read(readBytes);
+//                        if(length == -1){
+//                            System.out.println("读取完毕");
+//                            break;
+//                        }
+//                        packet.setLen(length);
+//                        packet.setBody(readBytes);
+//                        byte[] req = TransPacketCode.encode(packet); //编码
+//                        writer.write(req);
+//                    }while (true);
+//                    inputStream.close();
                 } else{
                     writer.write(lineString.getBytes());
                     writer.flush();
