@@ -2,15 +2,19 @@ package com.socket.client;
 
 import com.socket.code.TransPacketCode;
 import com.socket.packet.TransPacket;
+import com.socket.server.IServerSocket;
 import com.socket.utils.Command;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Random;
 
 public class IClientSocket {
+    private static Logger logger = Logger.getLogger(IServerSocket.class);
     public static void main(String[] args) {
         IClientSocket client=new IClientSocket();
-        client.startAction();
+        client.startAction((short) 1234);
     }
 
     void readSocketInfo(InputStream reader){
@@ -28,6 +32,7 @@ public class IClientSocket {
 
         public byte[] recBody(int len){
             num++;
+            logger.info("packet body length : " + len);
             byte[] bytes = new byte[len];
             int length = len;
             int off = 0;
@@ -55,23 +60,29 @@ public class IClientSocket {
                 int len = 64;
                 byte[] headbytes = new byte[len];
                 int off = 0;
+                Random random = new Random();
+                int r = random.nextInt(64) + 1;
+                String name = "b"+ r;
                 while (true){
                     //读取包头
                     int readLength = reader.read(headbytes,off,len);
                     if (readLength < len){
-                        off = readLength;
+                        off = off + readLength;
                         len = len - readLength;
                     } else{
+                        off = 0;
+                        len = 64;
                         TransPacket packet = TransPacketCode.decode(headbytes);
                         //获取内容body
                         packet.setBody(recBody(packet.getLen()));
                         if(packet.getMessageType() == Command.TUNNEL_TYPE_DATA){
                             FileOutputStream out = null;
                             try {
-                                out = new FileOutputStream("F:\\BaiduNetdiskDownload\\b.zip",true);
+                                out = new FileOutputStream("F:\\BaiduNetdiskDownload\\"+name+".zip",true);
                                 out.write(packet.getBody(),0,packet.getLen());
                                 out.flush();
                                 out.close();
+                                packet = null;
                             } catch (FileNotFoundException e) {
                                 // TODO Auto-generated catch block
                                 e.printStackTrace();
@@ -98,7 +109,7 @@ public class IClientSocket {
 
     }
 
-    public void startAction(){
+    public void startAction(short session_id){
         Socket socket=null;
         BufferedReader reader=null;
         OutputStream writer=null;
@@ -114,7 +125,7 @@ public class IClientSocket {
                 if(lineString.indexOf("send") != -1){
                     TransPacket packet = new TransPacket();
                     packet.setMessageType(Command.TUNNEL_TYPE_REG);
-                    packet.setSession_id((short) 1234);
+                    packet.setSession_id(session_id);
                     byte[] bytes1 = packet.getSerial_num();
                     bytes1[0] = (byte)0x10;
                     bytes1[1] = (byte)0x20;
@@ -129,36 +140,36 @@ public class IClientSocket {
                 }else if(lineString.indexOf("trans") != -1){
                     TransPacket packet = new TransPacket();
                     packet.setMessageType(Command.TUNNEL_TYPE_DATA);
-                    packet.setSession_id((short) 1234);
+                    packet.setSession_id(session_id);
                     byte[] bytes1 = packet.getSerial_num();
                     bytes1[0] = (byte)0x05;
                     bytes1[1] = (byte)0x0b;
                     packet.setSerial_num(bytes1);
-                    String value = "你好";
-                    byte[] vale = value.getBytes();
-                    packet.setBody(vale);
-                    packet.setLen(vale.length);
-                    byte[] req = TransPacketCode.encode(packet);
-                    writer.write(req);
-//                    File file = new File("F:\\BaiduNetdiskDownload\\Rational Rose 破解版.zip");
-//                    InputStream inputStream = new FileInputStream(file);
-//                    int num = 0;
-//                    Random random = new Random();
-//                    do{
-//                        num++;
-//                        int r = random.nextInt(64) + 1;
-//                        byte[] readBytes = new byte[1024 * r];
-//                        int length = inputStream.read(readBytes);
-//                        if(length == -1){
-//                            System.out.println("读取完毕");
-//                            break;
-//                        }
-//                        packet.setLen(length);
-//                        packet.setBody(readBytes);
-//                        byte[] req = TransPacketCode.encode(packet); //编码
-//                        writer.write(req);
-//                    }while (true);
-//                    inputStream.close();
+//                    String value = "你好";
+//                    byte[] vale = value.getBytes();
+//                    packet.setBody(vale);
+//                    packet.setLen(vale.length);
+//                    byte[] req = TransPacketCode.encode(packet);
+//                    writer.write(req);
+                    File file = new File("F:\\BaiduNetdiskDownload\\RationalRose破解版.zip");
+                    InputStream inputStream = new FileInputStream(file);
+                    int num = 0;
+                    Random random = new Random();
+                    do{
+                        num++;
+                        int r = random.nextInt(64) + 1;
+                        byte[] readBytes = new byte[1024 * r];
+                        int length = inputStream.read(readBytes);
+                        if(length == -1){
+                            System.out.println("读取完毕");
+                            break;
+                        }
+                        packet.setLen(length);
+                        packet.setBody(readBytes);
+                        byte[] req = TransPacketCode.encode(packet); //编码
+                        writer.write(req);
+                    }while (true);
+                    inputStream.close();
                 } else{
                     writer.write(lineString.getBytes());
                     writer.flush();

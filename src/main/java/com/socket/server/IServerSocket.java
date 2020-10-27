@@ -104,7 +104,7 @@ public class IServerSocket {
         }
 
         public byte[] recBody(int len){
-            logger.info("recv length - > " + len);
+            logger.info("socket : " +socket.getPort() +",recv length - > " + len);
             byte[] bytes = new byte[len];
             int length = len;
             int off = 0;
@@ -173,22 +173,23 @@ public class IServerSocket {
                             //接收内容body
                             packet.setBody(recBody(packet.getLen()));
                             //转发信息
-                            Set<String> keySet = map.keySet();
-                            for (String key : keySet){
-                                if(key.equals(String.valueOf(packet.getSession_id()))){
-                                    List<MyRuns> list = map.get(key);
-                                    for (int i = 0; i < list.size(); i++) {
-                                        if(list.get(i) != this){
-                                            byte[] b = TransPacketCode.encode(packet);
-                                            if(list.get(i).writer == null){
-                                                logger.error("socket is close, write error");
-                                            }else{
-                                                list.get(i).writer.write(b);//转发
-                                            }
+                            List<MyRuns> list = map.get(String.valueOf(packet.getSession_id()));
+                            if(list != null){
+                                byte[] b = TransPacketCode.encode(packet);
+                                for (int i = 0; i < list.size(); i++) {
+                                    if(list.get(i) != this){
+                                        if(list.get(i).writer == null){
+                                            logger.error("socket is close, write error");
+                                        }else{
+                                            logger.info("send to sessionId -> " + packet.getSession_id());
+                                            list.get(i).writer.write(b);//转发
                                         }
                                     }
                                 }
+                            }else{
+                                logger.warn("not find this session :" + packet.getSession_id());
                             }
+
                         }
                         len = 64;
                         headbytes = new byte[len];
